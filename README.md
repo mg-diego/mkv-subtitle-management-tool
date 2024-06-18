@@ -1,3 +1,4 @@
+
 # MKV Subtitle Management Tool
 
 This tool provides functionalities for managing subtitles in MKV (Matroska) video files. It allows you to:
@@ -19,18 +20,18 @@ This tool provides functionalities for managing subtitles in MKV (Matroska) vide
 ## Installation <a name="installation"></a>
 To use this tool, you need to have the following dependencies installed:
 
-- mkvtoolnix (includes mkvmerge, mkvextract, mkvpropedit)
-- python (>= 3.6)
-- asstosrt Python package
-- deep_translator Python package
+- [mkvtoolnix](https://mkvtoolnix.download/downloads.html) (includes mkvmerge, mkvextract, mkvpropedit)
+- Python (>= 3.6)
+- [asstosrt](https://pypi.org/project/asstosrt/) Python package
+- [deep_translator](https://pypi.org/project/deep-translator/) Python package
   
 You can install the Python dependencies using pip:
 
 ```sh
-pip install asstosrt deep_translator
+pip install -r requirements.txt
 ```
 
-Ensure mkvmerge, mkvextract, and mkvpropedit are available in your system's PATH. You can download mkvtoolnix from MKVToolNix.
+Ensure mkvmerge, mkvextract, and mkvpropedit are available in your system's PATH. You can download mkvtoolnix from [MkvToolnix](https://mkvtoolnix.download/downloads.html).
 
 ## Usage <a name="usage"></a>
 The tool is executed from the command line. Below are the different modes of operation:
@@ -73,15 +74,6 @@ python script.py --mode 4 --mkv_file /path/to/your/file.mkv --srt_file /path/to/
 - **--target_language (str):** The target language code for translation.
 
 
-### Dependencies
-- enum
-- subprocess
-- sys
-- asstosrt
-- json
-- os
-- argparse
-- pathlib
-- deep_translator
+By following this README, you should be able to use the provided script effectively for managing subtitles in your MKV files. 
 
-By following this README, you should be able to use the provided script effectively for managing subtitles in your MKV files. If you encounter any issues or have questions, feel free to open an issue.
+If you encounter any issues or have questions, feel free to open an issue.

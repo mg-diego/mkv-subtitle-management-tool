@@ -13,7 +13,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--mode', type=int)
 parser.add_argument('--mkv_file', type=str)
 parser.add_argument('--ass_file', type=str)
-parser.add_argument('--ass_file_language', type=str)
+parser.add_argument('--source_language', type=str)
+parser.add_argument('--srt_file', type=str)
+parser.add_argument('--target_language', type=str)
 args = parser.parse_args()
 
 class Modes(Enum):
@@ -65,48 +67,40 @@ def extract_mkv_ass_track(file_name, track_id, track_language):
     subprocess.check_call(extract_command, shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
 
 def convert_ass_to_srt(ass_file_name, track_language, latest_track_number):
+    print(f"---------- CONVERTING '{ass_file_name}' IN .SRT ----------")
     ass_file = open(ass_file_name)
     srt_str = asstosrt.convert(ass_file)
     
-    language_track_id = int(latest_track_number) + 1
-    str_file = open(f'{track_language}-{language_track_id}.srt', 'w')
+    target_file_name = f'{track_language}-{int(latest_track_number) + 1}.srt' if latest_track_number is not None else f'{track_language}.srt'
+    str_file = open(target_file_name, 'w')
     str_file.write(srt_str)
     str_file.close()
 
-def translate_srt(file_name, original_language, new_language):
-    '''
-    if Path('eng.srt').exists() and not (Path('spa.srt').exists()):
-        print("---------- GENERATING 'ESP' SUBTITLES ----------")
-        generate_new_mkv = True
-        with open('eng.srt', encoding="utf-8") as f:
-            content = f.read()
-            print("Reading eng.srt file")
-            lines = content.split("\n")
-            f.close()
+def translate_srt(file_path, original_language, new_language):    
+    print(f"---------- GENERATING '{new_language}' SUBTITLES ----------")
+    with open(file_path, encoding="utf-8") as f:
+        content = f.read()
+        print(f"Reading {file_path} file")
+        lines = content.split("\n")
+        f.close()
 
-        translated_content = str(content)
-        counter = 1
+    translated_content = str(content)
+    counter = 1
 
-        lines_to_translate = list(filter(lambda line: ((line.isdigit() == False) and ("-->" not in line) and "" != line), lines))
+    lines_to_translate = list(filter(lambda line: ((line.isdigit() == False) and ("-->" not in line) and "" != line), lines))
 
-        for line in lines_to_translate:
-            print(f"Translating... [{counter}/{len(lines_to_translate)}]")
-            translation = GoogleTranslator(source='english', target='spanish').translate(line)
-            safe_translation = "" if translation is None else translation
-            translated_content = translated_content.replace(line, safe_translation)
-            counter += 1
-                
-        output_srt = open("spa.srt", "w", encoding="utf-8")
+    for line in lines_to_translate:        
+        translation = GoogleTranslator(source=original_language, target=new_language).translate(line)
+        print(f"[{counter}/{len(lines_to_translate)}] \n - Original: {line}\n - Translation: {translation}\n")
+        safe_translation = "" if translation is None else translation
+        translated_content = translated_content.replace(line, safe_translation)
+        counter += 1
+            
+    output_srt = open(f"{new_language}.srt", "w", encoding="utf-8")
 
-        output_srt.write(translated_content)
-        output_srt.close()
-        if not("spa" in track_language_dict.keys()):
-            last_key = list(track_language_dict)[-1]
-            last_value = track_language_dict[last_key]
-            track_language_dict["spa"] = str(int(last_value) + 1)
-        new_subtitle_files = new_subtitle_files + ' spa.srt'
-        print(json.dumps(track_language_dict))
-    '''
+    output_srt.write(translated_content)
+    output_srt.close()
+    
 
 def update_new_subtitles_files(new_subtitle_files, track_language, language_track_id):
     return new_subtitle_files + f' {track_language}-{language_track_id}.srt' 
@@ -136,21 +130,20 @@ def parse_mkv_subtitle_track(track, file_name, latest_track_number, language_tra
 
     return track_language_dict
 
-
-
-mode = Modes[args.mode] if args.mode is not None else Modes.GENERATE_MKV_WITH_SRT
-full_path = args.mkv_file
-file_name = Path(full_path).name
-folder_path = os.path.dirname(full_path)
-os.chdir(folder_path)
-
-mkv_json_info = get_mkv_file_info(file_name)
-
-new_subtitle_files = ""
-track_language_dict = {}
-
+print(deep_translator.constans.GOOGLE_LANGUAGES_TO_CODES)
+mode = Modes(args.mode) if args.mode is not None else Modes.GENERATE_MKV_WITH_SRT
 
 if mode == Modes.GENERATE_MKV_WITH_SRT:
+    full_path = args.mkv_file
+    file_name = Path(full_path).name
+    folder_path = os.path.dirname(full_path)
+    os.chdir(folder_path)
+
+    mkv_json_info = get_mkv_file_info(file_name)
+
+    new_subtitle_files = ""
+    track_language_dict = {}
+
     print("---------- PARSING CURRENT .MKV FILE ----------")
     latest_track_number = mkv_json_info["tracks"][-1]["id"]
     for track in mkv_json_info["tracks"]:
@@ -173,10 +166,10 @@ if mode == Modes.GENERATE_MKV_WITH_SRT:
             update_mkv_subtitle_tracks_info(file_name, track_language, language_track_id)
 
 if mode == Modes.CONVERT_ASS_TO_SRT:
-    convert_ass_to_srt(args.ass_file, args.ass_file_language, "1")
+    convert_ass_to_srt(args.ass_file, args.source_language, None)
 
 if mode == Modes.TRANSLATE_SRT:
-    translate_srt("a", "en", "es")
+    translate_srt(args.srt_file, args.source_language, args.target_language)
 
 if mode == Modes.MERGE_SRT_INTO_MKV:
     raise Exception("Mode not supported yet.")
