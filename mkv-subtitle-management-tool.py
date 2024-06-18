@@ -1,4 +1,5 @@
 from enum import Enum
+import shutil
 import subprocess
 import sys
 import asstosrt
@@ -27,9 +28,8 @@ def get_mkv_file_info(file_name):
     return json.loads(result.stdout)
 
 def generate_mkv_temp_file(file_name):
-    print("---------- GENERATING RAW .MKV FILE WITHOUT SUBTITLES ----------")
-    remove_current_subs_command = f"mkvmerge -o input.mkv '{file_name}'"
-    subprocess.check_call(remove_current_subs_command, shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
+    print("---------- GENERATING .MKV TEMP ----------")
+    shutil.move(file_name, "input.mkv")
 
 def merge_subtitles_in_mkv(file_name, new_subtitle_files):
     print("---------- GENERATING NEW .MKV FILE WITH SRT SUBTITLES ----------")
